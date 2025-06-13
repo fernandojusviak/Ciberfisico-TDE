@@ -49,35 +49,66 @@ void setup() {
 
 void loop() {
   ArduinoCloud.update(); // Mantém a conexão com a nuvem
-
-  getFingerprintID(); // Tenta reconhecer uma digital
-  delay(1500);
+  getFingerprintID();    // Chama a função corretamente
+  delay(1500);           // Pequeno atraso para nova leitura
 }
 
+// Essa parte estava dentro do loop() por engano
 uint8_t getFingerprintID() {
+  unsigned long tempoInicio = millis();  // ⏱️ Início
+
   uint8_t p = finger.getImage();
   if (p != FINGERPRINT_OK) return p;
 
   p = finger.image2Tz();
   if (p != FINGERPRINT_OK) return p;
 
-  p = finger.fingerSearch();
+  p = finger.fingerFastSearch();
+  unsigned long tempoReconhecimento = millis();
+
   if (p == FINGERPRINT_OK) {
     Serial.printf("🆔 ID %d reconhecido! Confiança: %d\n", finger.fingerID, finger.confidence);
-    accessLog = "👤 Pessoa com ID #" + String(finger.fingerID) + " entrou";
-    Serial.println("🌐 Log atualizado na nuvem: " + accessLog);
 
-    // Liga o motor
+    accessLog = "👤 Pessoa com ID #" + String(finger.fingerID) + " entrou";
+    ArduinoCloud.update(); // força envio imediato
+    unsigned long tempoNuvem = millis();
+
+    // Relatório de latência
+    Serial.println("📊 MÉTRICAS DE DESEMPENHO:");
+    Serial.print("⏱️ Tempo de reconhecimento: ");
+    Serial.print(tempoReconhecimento - tempoInicio);
+    Serial.println(" ms");
+
+    Serial.print("☁️ Tempo até atualização na nuvem: ");
+    Serial.print(tempoNuvem - tempoReconhecimento);
+    Serial.println(" ms");
+
+    // Simula o motor girando por 3 segundos
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
     delay(3000);
-
-    // Desliga o motor
     digitalWrite(IN1, LOW);
     digitalWrite(IN2, LOW);
-  } else if (p == FINGERPRINT_NOTFOUND) {
+
+    unsigned long tempoFim = millis();
+    Serial.print("⚙️ Duração total do processo: ");
+    Serial.print(tempoFim - tempoInicio);
+    Serial.println(" ms");
+
+    // Consumo estimado (exemplo)
+    float correnteMotor = 0.3; // em amperes (300mA típico de motores pequenos)
+    float tensao = 5.0;        // alimentação do motor
+    float tempoSegundos = (tempoFim - tempoInicio) / 1000.0;
+    float energiaConsumida = correnteMotor * tensao * tempoSegundos;
+
+    Serial.print("🔋 Energia estimada consumida (motor): ");
+    Serial.print(energiaConsumida, 3);
+    Serial.println(" joules");
+  }
+  else if (p == FINGERPRINT_NOTFOUND) {
     Serial.println("❌ Nenhuma correspondência encontrada.");
-  } else {
+  }
+  else {
     Serial.println("❌ Erro na busca pela digital.");
   }
 
