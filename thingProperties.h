@@ -9,8 +9,8 @@
 
 // Replace with your actual values if needed
 const char DEVICE_LOGIN_NAME[]  = "cc349c88-898d-4c8b-ac97-125d53fb1870";
-const char SSID[]               = "Rausis 2.4G";        // Your WiFi SSID
-const char PASS[]               = "33544383";         // Your WiFi password
+const char SSID[]               = "";        // Your WiFi SSID
+const char PASS[]               = "";         // Your WiFi password
 const char DEVICE_KEY[]         = "FCuD1cA2O4en1#AmJmev0h!u5";  // Device secret key
 
 // Cloud variable
